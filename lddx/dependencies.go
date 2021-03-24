@@ -98,7 +98,10 @@ func resolvePath(path string, dep *Dependency, opts *DependencyOptions) (string,
 		}
 	}
 
-	return ResolveAbsPath(path)
+	p, _ := ResolveAbsPath(path)
+	// never return an error for resolve path. For system lib like `/usr/lib/libSystem.B.dylib`, it may not exist
+	// at file system really, but shouldn't fail here.
+	return p, nil
 }
 
 func matchesIgnoredPrefixes(path string, opts *DependencyOptions) bool {
