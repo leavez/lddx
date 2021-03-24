@@ -57,9 +57,21 @@ func IsFatMachO(file string) (bool, error) {
 
 	magic := binary.LittleEndian.Uint32(bytes)
 
-	return magic == mhMagic || magic == mhCigam ||
-		magic == mhMagic64 || magic == mhCigam64 ||
-		magic == fatMagic || magic == fatCigam, nil
+	if magic == mhMagic || magic == mhCigam ||
+		magic == mhMagic64 || magic == mhCigam64 {
+		return true, nil
+	}
+	if magic == fatMagic || magic == fatCigam {
+		// distinct java bytecode and fat macho
+		if num, err := fp.Read(bytes); num != 4 || err != nil {
+			if err != nil && err != io.EOF {
+				return false, err
+			}
+			return false, nil
+		}
+		return binary.LittleEndian.Uint32(bytes) < 25 || binary.BigEndian.Uint32(bytes) < 25, nil
+	}
+	return false, nil
 }
 
 // FindFatMachOFiles will recursively search the specified folder for
